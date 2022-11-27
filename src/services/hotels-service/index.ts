@@ -1,0 +1,30 @@
+import { invalidDataError, notFoundError } from "@/errors";
+import enrollmentRepository from "@/repositories/enrollment-repository";
+import ticketRepository from "@/repositories/ticket-repository";
+import hotelsRepository from "@/repositories/hotels-repository";
+import { Hotel } from "@prisma/client";
+
+async function viewHotels(userId: number) {
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  if (!enrollment) {
+    throw notFoundError();
+  }
+
+  const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
+
+  if (!ticket || !ticket.TicketType.includesHotel || ticket.TicketType.isRemote) {
+    throw notFoundError();
+  } else if (ticket.status === "RESERVED") {
+    throw invalidDataError(["Ticket payment not found"]);
+  }
+
+  const hotels = await hotelsRepository.findHotels();
+
+  return hotels;
+}
+
+const ticketService = {
+  viewHotels
+};
+
+export default ticketService;
