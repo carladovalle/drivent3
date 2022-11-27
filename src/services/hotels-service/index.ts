@@ -23,8 +23,28 @@ async function viewHotels(userId: number) {
   return hotels;
 }
 
+async function viewRooms(userId: number, hotelId: number) {
+  const enrollment = await enrollmentRepository.findWithAddressByUserId(userId);
+  if (!enrollment) {
+    throw notFoundError();
+  }
+
+  const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
+
+  if (!ticket || !ticket.TicketType.includesHotel || ticket.TicketType.isRemote) {
+    throw notFoundError();
+  } else if (ticket.status === "RESERVED") {
+    throw invalidDataError(["Ticket payment not found"]);
+  }
+
+  const rooms = await hotelsRepository.findRooms(hotelId);
+
+  return rooms;
+}
+
 const ticketService = {
-  viewHotels
+  viewHotels,
+  viewRooms
 };
 
 export default ticketService;
