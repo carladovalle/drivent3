@@ -11,7 +11,9 @@ export async function getHotels(req: AuthenticatedRequest, res: Response) {
 
     return res.status(httpStatus.OK).send(hotels);
   } catch (error) {
-    if (error.name === "UnauthorizedError") {
+    if (error.name === "ForbiddenError") {
+      return res.sendStatus(httpStatus.FORBIDDEN);
+    } else if (error.name === "UnauthorizedError") {
       return res.sendStatus(httpStatus.UNAUTHORIZED);
     } else if (error.name === "InvalidDataError") {
       return res.sendStatus(httpStatus.PAYMENT_REQUIRED);
@@ -24,19 +26,21 @@ export async function getRooms(req: AuthenticatedRequest, res: Response) {
   const { userId } = req;
 
   if (!hotelId) {
-    return res.sendStatus(httpStatus.BAD_REQUEST);
+    return res.sendStatus(httpStatus.UNAUTHORIZED);
   }
 
   try {
     const rooms = await hotelsService.viewRooms(userId, hotelId);
 
     if (!rooms) {
-      return res.sendStatus(httpStatus.NOT_FOUND);
+      return res.sendStatus(httpStatus.UNAUTHORIZED);
     }
 
     return res.status(httpStatus.OK).send(rooms);
   } catch (error) {
-    if (error.name === "UnauthorizedError") {
+    if (error.name === "ForbiddenError") {
+      return res.sendStatus(httpStatus.FORBIDDEN);
+    } else if (error.name === "UnauthorizedError") {
       return res.sendStatus(httpStatus.UNAUTHORIZED);
     } else if (error.name === "InvalidDataError") {
       return res.sendStatus(httpStatus.PAYMENT_REQUIRED);
